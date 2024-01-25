@@ -1,4 +1,11 @@
 import streamlit as st
+import openai
+import os
+from langchain.document_loaders import PyPDFLoader
+from langchain import PromptTemplate
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.chains.summarize import load_summarize_chain
+from langchain.chat_models import ChatOpenAI
 
 
 def custom_summary(docs,llm, custom_prompt, chain_type):
@@ -7,28 +14,6 @@ def custom_summary(docs,llm, custom_prompt, chain_type):
 @st.cache_data
 def setup_documents(pdf_file_path, chunk_size, chunk_overlap):
     pass
-
-
-@st.cache_data
-def color_chunks(text: str, chunk_size: int, overlap_size: int) -> str:
-    overlap_color = "#808080" # Light gray for the overlap
-    chunk_colors = ["#a8d08d", "#c6dbef", "#e6550d", "#fd8d3c", "#fdae6b", "#fdd0a2"] # Different shades of green for chunks
-
-    colored_text = ""
-    overlap = ""
-    color_index = 0
-
-    for i in range(0, len(text), chunk_size-overlap_size):
-        chunk = text[i:i+chunk_size]
-        if overlap:
-            colored_text += f'<mark style="background-color: {overlap_color};">{overlap}</mark>'
-        chunk = chunk[len(overlap):]
-        colored_text += f'<mark style="background-color: {chunk_colors[color_index]};">{chunk}</mark>'
-        color_index = (color_index + 1) % len(chunk_colors)
-        overlap = text[i+chunk_size-overlap_size:i+chunk_size]
-
-    return colored_text
-
 
 def main():
     st.set_page_config(layout="wide")
