@@ -1,12 +1,11 @@
 import streamlit as st
 import openai
 import os
-from langchain.document_loaders import PyPDFLoader
-from langchain import PromptTemplate
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.summarize import load_summarize_chain
-from langchain.chat_models import ChatOpenAI
-
+from langchain_community.chat_models import ChatOpenAI
 
 def custom_summary(docs,llm, custom_prompt, chain_type):
     return "This is a generated Summary"
