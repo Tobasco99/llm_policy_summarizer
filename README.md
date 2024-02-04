@@ -17,6 +17,8 @@ Or just install the required libraries using the following command:
 
 ```pip install -r requirements.txt```
 
+Also make sure that an OpenAI API key is provided as an environment variable called: "OPENAI_API_KEY".
+
 ### Running the policy summarization app
 In terminal run:
 
