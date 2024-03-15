@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+from langchain.llms import openai
 import os
 from tempfile import NamedTemporaryFile
 from langchain_community.document_loaders import PyPDFLoader
@@ -62,17 +62,18 @@ def delete_file(file_path):
     """
     os.remove(file_path)
 
-def custom_summary(docs,llm, user_input, chain_type, domain_knowledge, temperature):
+def custom_summary(docs,model, user_input, chain_type, domain_knowledge, temperature):
     COMBINE_PROMPT = PromptTemplate(template=combine_template, input_variables=["text"],
                                                 partial_variables={"focus": user_input ,"knowledge": "with" if domain_knowledge else "without"})
     MAP_PROMPT = PromptTemplate(template=map_template, input_variables=["text"])
     if chain_type == "map_reduce":
-        chain = load_summarize_chain(llm,chain_type=chain_type,
+        llm = ChatOpenAI(temperature=temperature, model_name="gpt-3.5-turbo-1106")
+        chain = load_summarize_chain(llm=llm,chain_type=chain_type,
                                      map_prompt=MAP_PROMPT,
                                      combine_prompt=COMBINE_PROMPT,
-                                     temperature=temperature)
+                                     )
     else:
-        chain = load_summarize_chain(llm,chain_type=chain_type)
+        chain = load_summarize_chain(model,chain_type=chain_type)
     
     summary_output = chain({"input_documents": docs}, return_only_outputs=True)["output_text"]
     
@@ -119,11 +120,11 @@ def main():
             temperature = st.sidebar.number_input("LLM Temperature", min_value=0.0, max_value=1.0, step=0.1, value=0.0)
             
             # make the choice of llm to select from a selectbox
-            llm = st.sidebar.selectbox("LLM", ["GPT3.5", "GPT4", ""])
-            if llm == "ChatGPT":
-                llm = "gpt3.5"
-            elif llm == "GPT4":
-                llm = "gpt4"
+            model = st.sidebar.selectbox("LLM", ["GPT3.5", "GPT4", ""])
+            if model == "ChatGPT":
+                model = "gpt3.5"
+            elif model == "GPT4":
+                model = "gpt4"
             
             if uploaded_file != None:
                 q_a_visible = True
@@ -131,7 +132,7 @@ def main():
                 st.write("Policy was loaded successfully")
                 
                 if st.button("Summarize"):
-                    result = custom_summary(docs,llm, user_prompt, chain_type, knowledge, temperature)
+                    result = custom_summary(docs,model, user_prompt, chain_type, knowledge, temperature)
                     st.write("Summary:")
                     st.info(result)
                     if st.button("Download"):
