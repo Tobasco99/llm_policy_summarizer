@@ -1,2 +1,5 @@
 *.pdf
 *.html
+.env
+.env-*
+__pycache__/
