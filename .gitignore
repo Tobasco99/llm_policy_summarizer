@@ -1,5 +1,5 @@
-*.pdf
-*.html
-.env
-.env-*
 __pycache__
+summarize_env/
+*.html
+*.pdf
+*.lock
