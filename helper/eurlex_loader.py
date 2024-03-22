@@ -69,7 +69,7 @@ def get_html_by_title (title: str) -> str:
     celex_value = celex_element[0].text if celex_element is not None else None
 
     if celex_value is not None:
-        html_string = get_html_by_celex_id(celex_value)   
+        html_string = eurlex.get_html_by_celex_id(celex_value)   
         return html_string
 
     else:
