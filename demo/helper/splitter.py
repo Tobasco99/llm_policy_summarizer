@@ -1,4 +1,3 @@
-from langchain_community.document_loaders import UnstructuredXMLLoader
 from langchain_text_splitters import (
     Language,
     RecursiveCharacterTextSplitter,
@@ -8,7 +7,6 @@ from tempfile import NamedTemporaryFile
 import sys
 sys.path.append('demo/helper')
 from xmlTagSplitter import XMLTagTextSplitter
-from langchain_text_splitters import HTMLHeaderTextSplitter
 
 
 def __save_uploaded_file(uploaded_file):
@@ -49,8 +47,7 @@ def __get_html_splitter(chunk_size, chunk_overlap):
 def __get_structure_splitter():
     tags_to_split_on = [
         ("div", "paragraph"),
-        ("head", "header"),
-        ("table", "table"),
+        ("figure", "figure"),
     ]
     tag_splitter = XMLTagTextSplitter(tags_to_split_on=tags_to_split_on)
     return tag_splitter
@@ -72,16 +69,13 @@ def load_and_split_text(text, chunk_size, chunk_overlap, splitter_type):
     """
 
     file_path = __save_uploaded_file(text)
-
-    loader = UnstructuredXMLLoader(file_path)
-    docs_raw = loader.load()
     
     if splitter_type == "XML":
         splitter = __get_html_splitter(chunk_size, chunk_overlap)
         with open(file_path, "r", encoding="utf-8") as file:
         # Read the content of the file
             content = file.read()
-        docs = splitter.split_text(content)
+        docs = splitter.split_text(content)[2:]
 
     elif splitter_type == "Text Structure":
         splitter = __get_structure_splitter()
