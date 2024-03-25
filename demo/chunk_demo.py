@@ -1,9 +1,4 @@
 import streamlit as st
-from langchain_community.document_loaders import UnstructuredXMLLoader
-from langchain_text_splitters import (
-    Language,
-    RecursiveCharacterTextSplitter,
-)
 from helper.splitter import load_and_split_text
 
 
@@ -22,7 +17,7 @@ def main():
     st.title("Policy Chunking Demo")
     chunk_size = st.sidebar.slider("Chunk Size", min_value=100, max_value=10000, step=100, value=2000)
     chunk_overlap = st.sidebar.slider("Chunk Overlap", min_value=0, max_value=10000, step=100, value=0)
-    chunk_method = st.sidebar.selectbox("Chunking Method", ["Recursive Character","Semantic" ,"HTML/XML Tag"])
+    chunk_method = st.sidebar.selectbox("Chunking Method", ["XML","Text Structure"])
         
     uploaded_file = st.file_uploader('Choose your policy document (xml after GROBID)', type=['html','xml'])
             

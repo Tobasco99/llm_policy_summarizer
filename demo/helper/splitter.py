@@ -5,6 +5,11 @@ from langchain_text_splitters import (
 )
 import os
 from tempfile import NamedTemporaryFile
+import sys
+sys.path.append('demo/helper')
+from xmlTagSplitter import XMLTagTextSplitter
+from langchain_text_splitters import HTMLHeaderTextSplitter
+
 
 def __save_uploaded_file(uploaded_file):
     """
@@ -41,6 +46,16 @@ def __get_html_splitter(chunk_size, chunk_overlap):
     )
     return splitter
 
+def __get_structure_splitter():
+    tags_to_split_on = [
+        ("div", "paragraph"),
+        ("head", "header"),
+        ("table", "table"),
+    ]
+    tag_splitter = XMLTagTextSplitter(tags_to_split_on=tags_to_split_on)
+    return tag_splitter
+
+
 def load_and_split_text(text, chunk_size, chunk_overlap, splitter_type):
     """Retrieve the file splitted in documents with given parameters.
 
@@ -61,17 +76,21 @@ def load_and_split_text(text, chunk_size, chunk_overlap, splitter_type):
     loader = UnstructuredXMLLoader(file_path)
     docs_raw = loader.load()
     
-    if splitter_type == "html":
+    if splitter_type == "XML":
         splitter = __get_html_splitter(chunk_size, chunk_overlap)
-    elif splitter_type == "semantic":
-        #todo
-        splitter = __get_html_splitter(chunk_size, chunk_overlap)
+        with open(file_path, "r", encoding="utf-8") as file:
+        # Read the content of the file
+            content = file.read()
+        docs = splitter.split_text(content)
+
+    elif splitter_type == "Text Structure":
+        splitter = __get_structure_splitter()
+        docs = splitter.split_text_from_file(file_path)
+
     else:
         #todo
         splitter = __get_html_splitter(chunk_size, chunk_overlap)
-    
-    docs_raw_text = [doc.page_content for doc in docs_raw]
-    docs = splitter.create_documents(docs_raw_text)
+
     __delete_file(file_path)
 
     return docs
