@@ -10,32 +10,26 @@ class ElementType(TypedDict):
     content: str
     metadata: Dict[str, str]
 
-class XMLTagTextSplitter:
+class XMLSentenceSplitter:
     """
-    Splitting HTML/XML files based on two tags.
+    Splitting HTML/XML files based on specified custom tags.
     Requires lxml package.
     """
 
     def __init__(
         self,
-        max_chunk_size: int, 
-        first_tag: str, 
-        second_tag: str,
+        tags_to_split_on: List[str],
         return_each_element: bool = False,
     ):
-        """Create a new XMLTagTextSplitter.
+        """Create a new XMLSentenceSplitter.
 
         Args:
-            max_chunk_size: maximum size of resulting chunks.
-            first_tag: the primary tag to split on.
-            second_tag: the fallback tag to split on if the chunk size is too large.
+            tags_to_split_on: list of custom tags we want to track for splitting.
             return_each_element: Return each element w/ associated tags.
         """
         # Output element-by-element or aggregated into chunks w/ common tags
         self.return_each_element = return_each_element
-        self.max_chunk_size = max_chunk_size
-        self.first_tag = first_tag
-        self.second_tag = second_tag
+        self.tags_to_split_on = tags_to_split_on
 
     def aggregate_elements_to_chunks(
         self, elements: List[Dict[str, str]]
@@ -90,32 +84,25 @@ class XMLTagTextSplitter:
         # Initialize list to store chunks
         chunks = []
 
-        # Retrieve elements based on the first tag
-        first_tag_xpath_expr = f'//tei:{self.first_tag}'
-        first_tag_elements = tree.xpath(first_tag_xpath_expr, namespaces=ns)
-
-        # Loop through each element of the first tag to split on
-        for first_tag_element in first_tag_elements:
-            # Convert the element to a string and get its size
-            first_tag_element_str = etree.tostring(first_tag_element, encoding=str)
-            chunk_size = len(first_tag_element_str)
-
-            # If the chunk size is smaller than max_chunk_size, add it to chunks
-            if chunk_size <= self.max_chunk_size:
-                chunks.append(first_tag_element_str)
-            else:
-                # Split the chunk based on the second tag until each chunk size is smaller than max_chunk_size
-                second_tag_xpath_expr = f'.//tei:{self.second_tag}'
-                second_tag_elements = first_tag_element.xpath(second_tag_xpath_expr, namespaces=ns)
-
-                for second_tag_element in second_tag_elements:
-                    # Convert the second tag element to a string
-                    second_tag_element_str = etree.tostring(second_tag_element, encoding=str).strip()
-                    # Check if adding this chunk exceeds max_chunk_size, if not, add it to chunks
-                    if len(chunks[-1]) + len(second_tag_element_str) <= self.max_chunk_size:
-                        chunks[-1] += second_tag_element_str
-                    else:
-                        # If adding this chunk exceeds max_chunk_size, start a new chunk
-                        chunks.append(second_tag_element_str)
+        # Loop through each tag to split on
+        for tag in self.tags_to_split_on:
+            # Retrieve elements based on the current tag
+            tag_name = tag[0]
+            xpath_expr = f'//tei:{tag_name}'
+            elements = tree.xpath(xpath_expr, namespaces=ns)
+            
+            # Loop through each element and add it as a new chunk
+            for element in elements:
+                # Convert the element to a string and add it to chunks
+                chunks.append(etree.tostring(element, encoding=str))
 
         return chunks
+
+
+
+# Example usage:
+if __name__ == "__main__":
+    splitter = XMLSentenceSplitter(tags_to_split_on=["head", "p", "table"])
+    html_file_path = "your_file.html"  # Change this to your HTML/XML file path
+    result = splitter.split_text_from_file(html_file_path)
+    print(result)

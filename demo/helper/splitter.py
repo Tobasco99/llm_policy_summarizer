@@ -7,6 +7,8 @@ from tempfile import NamedTemporaryFile
 import sys
 sys.path.append('demo/helper')
 from xmlTagSplitter import XMLTagTextSplitter
+from sentence_splitter import XMLSentenceSplitter
+
 
 
 def __save_uploaded_file(uploaded_file):
@@ -44,13 +46,25 @@ def __get_html_splitter(chunk_size, chunk_overlap):
     )
     return splitter
 
-def __get_structure_splitter():
+def __get_sentence_splitter():
     tags_to_split_on = [
-        ("div", "paragraph"),
-        ("figure", "figure"),
+        ("p", "sentence"),
+        ("figdesc", "figure description"),
+        ("row", "table row")
     ]
-    tag_splitter = XMLTagTextSplitter(tags_to_split_on=tags_to_split_on)
+    tag_splitter = XMLSentenceSplitter(tags_to_split_on=tags_to_split_on)
     return tag_splitter
+
+def __get_docs_from_structure_splitter(chunk_size, file_path):
+
+    text_splitter = XMLTagTextSplitter(first_tag="div", second_tag="p", max_chunk_size=chunk_size)
+
+    table_splitter = XMLTagTextSplitter(first_tag="figure", second_tag="row", max_chunk_size=chunk_size)
+
+    docs = text_splitter.split_text_from_file(file_path)
+    docs.append(table_splitter.split_text_from_file(file_path))
+
+    return docs
 
 
 def load_and_split_text(text, chunk_size, chunk_overlap, splitter_type):
@@ -73,17 +87,15 @@ def load_and_split_text(text, chunk_size, chunk_overlap, splitter_type):
     if splitter_type == "XML":
         splitter = __get_html_splitter(chunk_size, chunk_overlap)
         with open(file_path, "r", encoding="utf-8") as file:
-        # Read the content of the file
             content = file.read()
         docs = splitter.split_text(content)[2:]
 
     elif splitter_type == "Text Structure":
-        splitter = __get_structure_splitter()
-        docs = splitter.split_text_from_file(file_path)
+        docs = __get_docs_from_structure_splitter(chunk_size, file_path)
 
     else:
-        #todo
-        splitter = __get_html_splitter(chunk_size, chunk_overlap)
+        splitter = __get_sentence_splitter()
+        docs = splitter.split_text_from_file(file_path)
 
     __delete_file(file_path)
 

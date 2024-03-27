@@ -17,9 +17,9 @@ def main():
     st.title("Policy Chunking Demo")
     chunk_size = st.sidebar.slider("Chunk Size", min_value=100, max_value=10000, step=100, value=2000)
     chunk_overlap = st.sidebar.slider("Chunk Overlap", min_value=0, max_value=10000, step=100, value=0)
-    chunk_method = st.sidebar.selectbox("Chunking Method", ["XML","Text Structure"])
+    chunk_method = st.sidebar.selectbox("Chunking Method", ["XML","Text Structure","Sentence"])
         
-    uploaded_file = st.file_uploader('Choose your policy document (xml after GROBID)', type=['html','xml'])
+    uploaded_file = st.file_uploader('Choose your policy document (xml received from GROBID)', type=['html','xml'])
             
     if uploaded_file != None:
         try:
