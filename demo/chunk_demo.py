@@ -1,35 +1,5 @@
 import streamlit as st
-import requests
-from helper.splitter import load_and_split_text
-from FlagEmbedding import BGEM3FlagModel
-from langchain_openai import OpenAIEmbeddings
-
-
-
-def vectorize_docs(docs, vectorizer, key):
-    url = 'http://137.226.232.15:11434/api/embeddings'
-
-
-    #add functions for handling the vectorizer (helper)
-    if vectorizer == "OpenAI Embeddings":
-        embeddings = OpenAIEmbeddings(model="text-embedding-3-small",api_key=key)
-        embedding = embeddings.embed_query(docs[0])
-
-
-    elif vectorizer == "BGE-M3":
-        #todo
-        model = BGEM3FlagModel('BAAI/bge-m3',  
-                       use_fp16=True)
-        embedding = model.encode(docs[0], 
-                            batch_size=12, 
-                            max_length=2000, # If you don't need such a long length, you can set a smaller value to speed up the encoding process.
-                            )['dense_vecs']
-    else:
-        body = {'model': 'nomic-embed-text',
-                'prompt': docs[0]}  
-        embedding = requests.post(url, json = body)
-      
-    return embedding
+from helper.splitter import load_and_split_text,vectorize_docs
 
 def main():
     st.set_page_config(layout="wide")
@@ -48,10 +18,13 @@ def main():
         except ValueError:
             st.warning("Chunk size needs to be larger than overlap!")
 
-        vectorizer = st.selectbox("Vectorizer", ["OpenAI Embeddings", "BGE-M3", "nomic-embed-text-v1.5"])
+        vectorizer = st.selectbox("Vectorizer", ["OpenAI Embeddings", "mxbai-embed-large", "nomic-embed-text-v1.5"])
                 
         if st.button("Vectorize"):
-            result = vectorize_docs(docs,vectorizer, openai_key)
+            try:
+                result = vectorize_docs(docs,vectorizer, openai_key)
+            except ValueError:
+                st.warning("OpenAI key is required!")
             st.write("Vectors:")
             st.info(result[:5])
 

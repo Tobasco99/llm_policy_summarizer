@@ -8,6 +8,8 @@ import sys
 sys.path.append('demo/helper')
 from xmlTagSplitter import XMLTagTextSplitter
 from sentence_splitter import XMLSentenceSplitter
+import requests
+from langchain_openai import OpenAIEmbeddings
 
 
 
@@ -100,4 +102,27 @@ def load_and_split_text(text, chunk_size, chunk_overlap, splitter_type):
     __delete_file(file_path)
 
     return docs
+
+def vectorize_docs(docs, vectorizer, key):
+    url = 'http://137.226.232.15:11434/api/embeddings'
+
+
+    #add functions for handling the vectorizer (helper)
+    if vectorizer == "OpenAI Embeddings":
+        if key is None:
+            raise ValueError
+        embeddings = OpenAIEmbeddings(model="text-embedding-3-small",api_key=key)
+        embedding = embeddings.embed_query(docs[0])
+
+    elif vectorizer == "mxbai-embed-large":
+        body = {'model': 'mxbai-embed-large',
+                'prompt': docs[0]}  
+        embedding = requests.post(url, json = body)
+        
+    else:
+        body = {'model': 'nomic-embed-text',
+                'prompt': docs[0]}  
+        embedding = requests.post(url, json = body)
+      
+    return embedding
 
