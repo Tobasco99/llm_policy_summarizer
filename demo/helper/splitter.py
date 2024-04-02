@@ -24,7 +24,7 @@ def __store_embeddings(embeddings:List):
         props = []
         uuids = []
         for embedding in embeddings:
-            object_props = {"embedding": embedding}
+            object_props = {"chunk_embedding": embedding}
             object_uuid = generate_uuid5(object_props)
             props.append(object_props)
             uuids.append(object_uuid)
