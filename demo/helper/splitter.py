@@ -2,6 +2,7 @@ from langchain_text_splitters import (
     Language,
     RecursiveCharacterTextSplitter,
 )
+from typing import List
 import os
 from tempfile import NamedTemporaryFile
 import sys
@@ -10,8 +11,38 @@ from xmlTagSplitter import XMLTagTextSplitter
 from sentence_splitter import XMLSentenceSplitter
 import requests
 from langchain_openai import OpenAIEmbeddings
+import weaviate
+import weaviate.classes as wvc
+from weaviate.util import generate_uuid5
 
 
+def __store_embeddings(embeddings:List):
+    client = weaviate.connect_to_custom(http_host="weaviate-mahk.tech4comp.dbis.rwth-aachen.de", http_secure=True, 
+                                        auth_credentials=weaviate.classes.init.Auth.bearer_token(access_token="f5b035cd-548f-441d-adc8-6029fce22a2b"))
+
+    try:
+        props = []
+        uuids = []
+        for embedding in embeddings:
+            object_props = {"embedding": embedding}
+            object_uuid = generate_uuid5(object_props)
+            props.append(object_props)
+            uuids.append(object_uuid)
+
+        with client.batch.dynamic(  # client.batch.dynamic() or client.batch.rate_limit() also possible
+            consistency_level=wvc.ConsistencyLevel.QUORUM
+        ) as batch:
+            # Add objects to the batch, e.g.
+            for i in range(len(props)):
+                batch.add_object(
+                    collection="policies",
+                    properties=props[i],
+                    uuid=uuids[i],
+                    # tenant="tenantA"  # Optional; specify the tenant in multi-tenancy collections
+                )
+
+    finally:
+        client.close()
 
 def __save_uploaded_file(uploaded_file):
     """
@@ -81,7 +112,7 @@ def load_and_split_text(text, chunk_size, chunk_overlap, splitter_type):
 
     Returns
     -------
-    List[Document]: a list of document chunks.
+    List[str]: a list of document chunks.
     """
 
     file_path = __save_uploaded_file(text)
@@ -103,26 +134,43 @@ def load_and_split_text(text, chunk_size, chunk_overlap, splitter_type):
 
     return docs
 
-def vectorize_docs(docs, vectorizer, key):
+def vectorize_docs(docs: List, vectorizer: str, key:str):
+    """Retrieve the file splitted in documents with given parameters.
+
+    Parameters
+    ----------
+    docs (List[str]): The list of document chunks
+    vectorizer (str): The intended vectorizer to use.
+    key(str): the OpenAI key.
+
+    Returns
+    -------
+    List[number]: the vectorized chunks.
+    """
     url = 'http://137.226.232.15:11434/api/embeddings'
 
-
-    #add functions for handling the vectorizer (helper)
     if vectorizer == "OpenAI Embeddings":
         if key is None:
             raise ValueError
-        embeddings = OpenAIEmbeddings(model="text-embedding-3-small",api_key=key)
-        embedding = embeddings.embed_query(docs[0])
+        embedding_model = OpenAIEmbeddings(model="text-embedding-3-small",api_key=key)
+        #embedding_model.embed_documents(texts=docs)
+        embedding = embedding_model.embed_query(docs[0])
 
     elif vectorizer == "mxbai-embed-large":
+        # todo: loop
         body = {'model': 'mxbai-embed-large',
                 'prompt': docs[0]}  
         embedding = requests.post(url, json = body)
         
     else:
+        #todo: loop
         body = {'model': 'nomic-embed-text',
                 'prompt': docs[0]}  
         embedding = requests.post(url, json = body)
-      
+
+    # send embeddings to database
+    #__store_embeddings(embedding)
+
+    # later return none  
     return embedding
 
