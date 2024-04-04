@@ -2,24 +2,21 @@ from langchain_text_splitters import (
     Language,
     RecursiveCharacterTextSplitter,
 )
-from typing import list
 import os
 from tempfile import NamedTemporaryFile
-import sys
-sys.path.append('demo/helper')
-from xmlTagSplitter import XMLTagTextSplitter
-from sentence_splitter import XMLSentenceSplitter
 import requests
 from langchain_openai import OpenAIEmbeddings
 import weaviate
 import weaviate.classes as wvc
-from weaviate.util import generate_uuid5
+from helper.xmlTagSplitter import XMLTagTextSplitter
+from helper.sentence_splitter import XMLSentenceSplitter
+
 
 
 def __store_embeddings(embeddings:list, chunks:list, title:str):
     # get from env
     client = weaviate.connect_to_custom(http_host="weaviate-mahk.tech4comp.dbis.rwth-aachen.de", http_secure=True, 
-                                        auth_credentials=weaviate.classes.init.Auth.bearer_token(access_token="f5b035cd-548f-441d-adc8-6029fce22a2b"))
+                                        auth_credentials=wvc.init.Auth.bearer_token(access_token="f5b035cd-548f-441d-adc8-6029fce22a2b"))
     try:
         props = []
         for chunk in chunks:

@@ -1,21 +1,25 @@
+# demo/Dockerfile
+
 FROM python:3.11-slim
 
-RUN pip install poetry==1.6.1
+WORKDIR /demo
 
-RUN poetry config virtualenvs.create false
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    software-properties-common \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /code
+COPY demo/requirements.txt .
 
-COPY ./pyproject.toml ./README.md ./poetry.lock* ./
+RUN pip3 install -r requirements.txt
 
-COPY ./package[s] ./packages
+COPY . .
 
-RUN poetry install  --no-interaction --no-ansi --no-root
+EXPOSE 8501
 
-COPY ./app ./app
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 
-RUN poetry install --no-interaction --no-ansi
+ENTRYPOINT ["streamlit", "run", "--server.port=8501", "--server.address=0.0.0.0", "demo/chunk_demo.py"]
 
-EXPOSE 8080
-
-CMD exec uvicorn app.server:app --host 0.0.0.0 --port 8080
