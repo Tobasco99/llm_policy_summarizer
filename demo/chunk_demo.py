@@ -26,7 +26,7 @@ def main():
             except ValueError:
                 st.warning("OpenAI key is required!")
             st.write("Vectors:")
-            st.info(result[:5])
+            st.info(result[0][:5])
 
 
 if __name__ == "__main__":
