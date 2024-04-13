@@ -149,7 +149,7 @@ def vectorize_docs(docs:list, vectorizer:str, key:str, title:str = "dummy"):
 
     # send embeddings to database
     weaviate = WeaviateConnection()
-    weaviate.store_embeddings(embeddings=embeddings, chunks=docs[0:2], title=title)
+    weaviate.store_embeddings(embeddings=embeddings, chunks=docs[0:2], title=title, vectorizer=vectorizer)
 
     # later return none  
     return embeddings
