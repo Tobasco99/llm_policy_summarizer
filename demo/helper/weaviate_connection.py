@@ -58,10 +58,10 @@ class WeaviateConnection:
                     "class": self.schema_name,
                     "properties": {
                         "chunk": chunk,
-                        "title": title,
-                        "vectorizer": vectorizer,
-                    },
-                    "vector": embeddings[i],
+                        "title": title,                    },
+                    "vectors": {
+                        vectorizer: embeddings[i]
+                    }
                 }
                 objects.append(object_props)
 
@@ -126,11 +126,6 @@ class WeaviateConnection:
                             "description": "A chunk of text of the policy document",
                             "name": "chunk"
                         },
-                        {
-                            "dataType": ["text"],
-                            "description": "The vectorizer used to generate the embeddings",
-                            "name": "vectorizer"
-                        }
                     ]
                 }
                 response = session.post(f"{self.weaviate_url}/v1/schema", json=schema, headers={"Authorization": f"Bearer {self.weaviate_token}"})
