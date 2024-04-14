@@ -58,7 +58,8 @@ class WeaviateConnection:
                     "class": self.schema_name,
                     "properties": {
                         "chunk": chunk,
-                        "title": title,                    },
+                        "title": title,             
+                    },
                     "vectors": {
                         vectorizer: embeddings[i]
                     }
@@ -97,7 +98,7 @@ class WeaviateConnection:
         """
         try:    
             with requests.Session() as session:
-                response = session.get(f"{self.weaviate_url}/v1/schema/Policy", headers={"Authorization": f"Bearer {self.weaviate_token}"})  
+                response = session.get(f"{self.weaviate_url}/v1/schema/{self.schema_name}", headers={"Authorization": f"Bearer {self.weaviate_token}"})  
                 response.raise_for_status()
                 return True
         except Exception as e:
@@ -113,7 +114,7 @@ class WeaviateConnection:
         try:
             with requests.Session() as session:
                 schema = {
-                    "class": "Policy",
+                    "class": self.schema_name,
                     "description": "A policy document",
                     "properties": [
                         {
