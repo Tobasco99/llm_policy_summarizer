@@ -18,7 +18,5 @@ def grobid_parse_pdf(pdf_file: bytes):
     url = f"{grobid_url}/api/processFulltextDocument"
     files = {"input": pdf_file}
     response = requests.post(url, files=files)
-
-    # Extract the XML from the response
-    xml = response.text
-    return xml
+    response.raise_for_status()
+    return response

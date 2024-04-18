@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, HTTPException
 from fastapi.responses import RedirectResponse
 from service.splitter import load_and_split_text, vectorize_docs
+from service.grobid import grobid_parse_pdf
 from typing import Annotated
 
 app = FastAPI()
@@ -9,8 +10,16 @@ app = FastAPI()
 async def redirect_root_to_docs():
     return RedirectResponse("/docs")
 
+@app.post("/documents/")
+async def create_upload_file(file: Annotated[bytes, File()]):
+    if not file:
+        raise HTTPException(status_code=400, detail="No file uploaded")
+    else:
+        xml = grobid_parse_pdf(file)
+        return {"xml": xml}
+
 @app.post("/chunks/")
-async def create_upload_file(file: Annotated[bytes, File()], chunk_size: int, chunk_overlap: int, splitter_type: str):
+async def create_chunks(file: Annotated[bytes, File()], chunk_size: int, chunk_overlap: int, splitter_type: str):
     if not file:
         raise HTTPException(status_code=400, detail="No file uploaded")
     else:
