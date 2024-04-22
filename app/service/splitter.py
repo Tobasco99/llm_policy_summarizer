@@ -124,7 +124,7 @@ def vectorize_docs(docs:list, vectorizer:str, key:str, title:str = "dummy"):
         if key is None:
             raise ValueError
         embedding_model = OpenAIEmbeddings(model="text-embedding-3-small",api_key=key)
-        embeddings = embedding_model.embed_documents(texts=docs[0:2])
+        embeddings = embedding_model.embed_documents(texts=docs)
         #embedding = embedding_model.embed_query(docs[0])
 
     elif vectorizer == "mxbai-embed-large":
@@ -132,7 +132,9 @@ def vectorize_docs(docs:list, vectorizer:str, key:str, title:str = "dummy"):
             raise ValueError
         for doc in docs:
             body = {'model': 'mxbai-embed-large',
-                    'prompt': doc}  
+                    'prompt': doc,
+                    'stream': False
+                    }  
             response = requests.post(embed_url, json = body)
             embedding = response.json()["embedding"]
             embeddings.append(embedding)
@@ -142,12 +144,13 @@ def vectorize_docs(docs:list, vectorizer:str, key:str, title:str = "dummy"):
             raise ValueError
         for doc in docs:
             body = {'model': 'nomic-embed-text',
-                    'prompt': doc}  
+                    'prompt': doc,
+                    'stream': False}  
             response = requests.post(embed_url, json = body)
             embedding = response.json()["embedding"]
             embeddings.append(embedding)
 
     # send embeddings to database
     weaviate = WeaviateConnection()
-    weaviate.store_embeddings(embeddings=embeddings, chunks=docs[0:2], title=title, vectorizer=vectorizer)
+    weaviate.store_embeddings(embeddings=embeddings, chunks=docs, title=title, vectorizer=vectorizer)
 
