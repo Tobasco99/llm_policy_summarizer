@@ -1,5 +1,7 @@
 import re
 import eurlex
+from bs4 import BeautifulSoup as bs
+
 
 def inject_knowledge(chunk):
     """
@@ -15,26 +17,52 @@ def inject_knowledge(chunk):
     matches = __extract_slash_notation(chunk)
     knowledge_dict = __create_knowledge_dict(matches)
     for slash_notation, content in knowledge_dict.items():
-        chunk = chunk.replace(slash_notation, f"<knowledge>{content}</knowledge>")
+        chunk = chunk.replace(slash_notation, f"<ent>{slash_notation}</ent><ent_desc>{content}</ent_desc>")
     return chunk
 
 def __extract_slash_notation(text):
     """
-    Extracts slash notation dates (e.g., 12/2022) from the given text.
+    Extracts slash notation (e.g., 12/2022) from the given text.
 
     Args:
-        text (str): The text to search for slash notation dates.
+        text (str): The text to search for slash notation.
 
     Returns:
-        list: A list of slash notation dates found in the text.
+        list: A list of slash notation found in the text.
     """
-    pattern = r'\d{1,2}/\d{4}'
+    pattern = r'\d{1,3}\/\d{4}'
     matches = re.findall(pattern, text)
     return matches
 
 def __get_abstract(html):
-    #todo send to llm to get abstract summary
-    return "abstract"
+    """
+    Retrieves the abstract from the given HTML content.
+
+    Args:
+        html (str): The HTML content to extract the abstract from.
+
+    Returns:
+        str: The abstract extracted from the HTML content.
+    """
+    soup = bs(html, features="html.parser")
+    p_tags_text = []
+    p_tags = soup.find_all("p")
+    start = False
+    end = False
+
+    for p_tag in p_tags:
+        if p_tag.text == "Article 1" or p_tag.text == "Article 1":
+            start = True
+        if p_tag.text == "Article 2" or p_tag.text == "Article 2":
+            start = False
+            end = True
+        if start:
+            p_tags_text.append(p_tag.text)
+        if end:
+            break
+
+    abstract=' '.join(p_tags_text[2:])
+    return abstract
 
 
 def __create_knowledge_dict(slash_notations):
