@@ -1,6 +1,7 @@
 import re
 import eurlex
 from bs4 import BeautifulSoup as bs
+from service.weaviate_connection import WeaviateConnection
 
 
 def inject_knowledge(chunk):
@@ -36,32 +37,40 @@ def __extract_slash_notation(text):
 
 def __get_abstract(html):
     """
-    Retrieves the abstract from the given HTML content.
+    Extracts the abstract from an HTML document.
 
     Args:
-        html (str): The HTML content to extract the abstract from.
+        html (str): The HTML document.
 
     Returns:
-        str: The abstract extracted from the HTML content.
+        str: The extracted abstract.
+
+    Raises:
+        Exception: If an error occurs during the extraction process.
     """
-    soup = bs(html, features="html.parser")
-    p_tags_text = []
-    p_tags = soup.find_all("p")
-    start = False
-    end = False
 
-    for p_tag in p_tags:
-        if p_tag.text == "Article 1" or p_tag.text == "Article 1":
-            start = True
-        if p_tag.text == "Article 2" or p_tag.text == "Article 2":
-            start = False
-            end = True
-        if start:
-            p_tags_text.append(p_tag.text)
-        if end:
-            break
+    try:
+        soup = bs(html, features="html.parser")
+        p_tags_text = []
+        p_tags = soup.find_all("p")
+        start = False
+        end = False
 
-    abstract=' '.join(p_tags_text[2:])
+        for p_tag in p_tags:
+            if p_tag.text == "Article 1" or p_tag.text == "Article 1":
+                start = True
+            if p_tag.text == "Article 2" or p_tag.text == "Article 2":
+                start = False
+                end = True
+            if start:
+                p_tags_text.append(p_tag.text)
+            if end:
+                break
+
+        abstract = ' '.join(p_tags_text[2:])
+    except Exception as e:
+        abstract = "A policy"
+    
     return abstract
 
 
@@ -77,9 +86,15 @@ def __create_knowledge_dict(slash_notations):
 
     """
     knowledge_dict = {}
+    weaviate = WeaviateConnection()
     for slash_notation in slash_notations:
+        knowledge = weaviate.get_knowledge(slash_notation)
+        if knowledge is not None:
+            knowledge_dict[slash_notation] = knowledge
+            continue
         celex = eurlex.get_celex_id(slash_notation=slash_notation)
         html = eurlex.get_html_by_celex_id(celex)
         content = __get_abstract(html)
         knowledge_dict[slash_notation] = content
+        weaviate.store_knowledge(slash_notation, content)
     return knowledge_dict
