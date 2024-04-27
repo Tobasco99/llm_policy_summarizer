@@ -18,7 +18,7 @@ def inject_knowledge(chunk):
     matches = __extract_slash_notation(chunk)
     knowledge_dict = __create_knowledge_dict(matches)
     for slash_notation, content in knowledge_dict.items():
-        chunk = chunk.replace(slash_notation, f"<ent>{slash_notation}</ent><ent_desc>{content}</ent_desc>")
+        chunk = chunk.replace(slash_notation, f"<reg>{slash_notation}</reg><reg_desc>{content}</reg_desc>")
     return chunk
 
 def __extract_slash_notation(text):
@@ -68,6 +68,8 @@ def __get_abstract(html):
                 break
 
         abstract = ' '.join(p_tags_text[2:])
+        if abstract == "":
+            abstract = "A policy"
     except Exception as e:
         abstract = "A policy"
     
