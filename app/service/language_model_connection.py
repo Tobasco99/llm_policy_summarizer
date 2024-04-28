@@ -3,11 +3,11 @@ from dotenv import load_dotenv, find_dotenv
 import requests
 import os
 from langchain_core.output_parsers import JsonOutputParser
-from typing import List
 from langchain_core.prompts import PromptTemplate
-from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_openai import OpenAI
 from langchain_community.llms import Ollama
+import json
+from service.etc.output_classes import Questions, ChunkSummary
 
 
 class LanguageModel(Enum):
@@ -15,29 +15,19 @@ class LanguageModel(Enum):
     GPT_3_5 = "gpt-3.5-turbo"
     GPT_4 = "gpt-4-turbo"
 
-class Question(BaseModel):
-    question: str = Field(description="question to check the knowledge level")
-    answers: list = Field(description="list of 4 possible answers, only one is correct, include A, B, C, D before question")
-    correct_answer: str = Field(description="correct answer")
-
-class Questions(BaseModel):
-    questions: List[Question] = Field(description="question object")
-
-class ChunkSummary(BaseModel):
-    stakeholder: list = Field(description="list of involved stakeholders") 
-    key_information: list = Field(description="list of key information as short bulletpoints")
-    chunk_summary: str = Field(description="summary of the entire chunk")
-
 class LanguageModelConnection:
     def __init__(self, model:LanguageModel, key:str|None = None):
         self.model = model
         self.key = key
+         # Load prompts from external JSON file
+        with open('service/etc/prompts.json', 'r') as f:
+            self.prompts = json.load(f)
 
         if model == LanguageModel.LLAMA2:
                 load_dotenv(find_dotenv())
                 self.ol_url = os.environ.get("OLLAMA_URL")
                 self.model_url = self.ol_url+'/api/generate'
-                self.llm = Ollama(model=LanguageModel.LLAMA2, base_url=self.ol_url)
+                self.llm = Ollama(model=LanguageModel.LLAMA2, base_url=self.ol_url, max_tokens=-1, temperature=0.2)
         elif model == LanguageModel.GPT_3_5:
                 self.model_url = 'https://api.openai.com/v1/engines/gpt-3.5-turbo/completions'
                 self.llm = OpenAI(openai_api_key=self.key, max_tokens=-1, temperature=0.2)
@@ -47,7 +37,7 @@ class LanguageModelConnection:
 
     def generate_questionnaire(self, topic):
         # A query intented to prompt a language model to populate the data structure.
-        question_query = "Your job is to determine the level of knowledge of a user. Given a topic ask 3 multiple choice questions with 4 possible answers each, that help to determine the knowledge level."
+        question_query = self.prompts['questionnaire']
 
         # Set up a parser + inject instructions into the prompt template.
         parser = JsonOutputParser(pydantic_object=Questions)
@@ -65,7 +55,7 @@ class LanguageModelConnection:
     
     def generate_chunk_summary(self, text_chunk):
         # A query intented to prompt a language model to populate the data structure.
-        sum_query = "Given the part of a policy document, extract useful information and generate a summary. If a external regulation is mentioned, it is wrapped in reg tags with description of it in reg_desc tags. To effectively complete the summarization, follow these steps: 1. extract the key information provided in the text and write all information as bullet points in the key_information key. 2. identify the stakeholder involved in the text and write it in the stakeholder key. 3. use the key information and the stakeholder to generate a summary of the text and write it in the chunk_summary key."
+        sum_query = self.prompts['chunk_summary']
 
         # Set up a parser + inject instructions into the prompt template.
         parser = JsonOutputParser(pydantic_object=ChunkSummary)
