@@ -108,14 +108,33 @@ class XMLTagTextSplitter:
                 second_tag_xpath_expr = f'.//tei:{self.second_tag}'
                 second_tag_elements = first_tag_element.xpath(second_tag_xpath_expr, namespaces=ns)
 
+                # Initialize a new chunk
+                current_chunk = first_tag_element_str
+
                 for second_tag_element in second_tag_elements:
                     # Convert the second tag element to a string
                     second_tag_element_str = etree.tostring(second_tag_element, encoding=str).strip()
-                    # Check if adding this chunk exceeds max_chunk_size, if not, add it to chunks
-                    if len(chunks[-1]) + len(second_tag_element_str) <= self.max_chunk_size:
-                        chunks[-1] += second_tag_element_str
+                    # Check if adding this chunk exceeds max_chunk_size, if not, add it to the current chunk
+                    if len(current_chunk) + len(second_tag_element_str) <= self.max_chunk_size:
+                        current_chunk += second_tag_element_str
                     else:
-                        # If adding this chunk exceeds max_chunk_size, start a new chunk
-                        chunks.append(second_tag_element_str)
+                        # If adding this chunk exceeds max_chunk_size, add the current chunk to chunks and start a new chunk
+                        chunks.append(current_chunk)
+                        current_chunk = second_tag_element_str
 
-        return chunks
+                # Add the last chunk to chunks
+                chunks.append(current_chunk)
+
+        # Merge chunks until they reach max_chunk_size
+        merged_chunks = []
+        current_merged_chunk = ""
+        for chunk in chunks:
+            if len(current_merged_chunk) + len(chunk) <= self.max_chunk_size:
+                current_merged_chunk += chunk
+            else:
+                merged_chunks.append(current_merged_chunk)
+                current_merged_chunk = chunk
+        # Add the last merged chunk to the list
+        merged_chunks.append(current_merged_chunk)
+
+        return merged_chunks
