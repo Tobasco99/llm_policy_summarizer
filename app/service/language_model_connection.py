@@ -15,6 +15,11 @@ class LanguageModel(Enum):
     GPT_3_5 = "gpt-3.5-turbo"
     GPT_4 = "gpt-4-turbo"
 
+class KnowledgeLevel(Enum):
+    NO = "No prior knowledge"
+    BASICS = "A basic understanding"
+    EXPERT = "An expert understanding"
+
 class LanguageModelConnection:
     def __init__(self, model:LanguageModel, key:str|None = None):
         self.model = model
@@ -71,7 +76,7 @@ class LanguageModelConnection:
         result = chain.invoke({"query": sum_query, "text_chunk": text_chunk})
         return result
     
-    def generate_policy_summary(self, chunk_summarys):
+    def generate_policy_summary(self, chunk_summarys, knowledge_level):
         partial_summary = ""
         # A query intented to prompt a language model to populate the data structure.
         sum_query = self.prompts['full_summary']
@@ -80,14 +85,14 @@ class LanguageModelConnection:
         parser = JsonOutputParser(pydantic_object=PolicySummary)
 
         prompt = PromptTemplate(
-        template="{format_instructions}\n {query}\n The Chunk summary: {chunk_summary}\n The partial summary: {partial_summary}\n",
-        input_variables=["query", "chunk_summary", "partial_summary"],
+        template="{format_instructions}\n {query}\n The user has {knowledge}\n The Chunk summary: {chunk_summary}\n The partial summary: {partial_summary}\n",
+        input_variables=["query", "chunk_summary", "partial_summary", "knowledge"],
         partial_variables={"format_instructions": parser.get_format_instructions()},
         )
 
         chain = prompt | self.llm | parser
 
         for chunk_summary in chunk_summarys:
-            result = chain.invoke({"query": sum_query, "chunk_summary": chunk_summary, "partial_summary": partial_summary})
+            result = chain.invoke({"query": sum_query, "chunk_summary": chunk_summary, "partial_summary": partial_summary, "knowledge": knowledge_level})
             partial_summary += result["summary"]
-        return result
+        return partial_summary
