@@ -62,7 +62,7 @@ def __get_docs_from_structure_splitter(chunk_size:int, file_path:str):
     table_splitter = XMLTagTextSplitter(first_tag="figure", second_tag="row", max_chunk_size=chunk_size)
 
     docs = text_splitter.split_text_from_file(file_path)
-    docs.append(table_splitter.split_text_from_file(file_path))
+    docs.extend(table_splitter.split_text_from_file(file_path))
 
     return docs
 
