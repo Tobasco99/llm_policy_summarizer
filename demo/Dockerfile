@@ -1,6 +1,6 @@
 # demo/Dockerfile
 
-FROM python:3.11-slim
+FROM --platform=amd64 python:3.11-slim
 
 WORKDIR /demo
 

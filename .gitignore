@@ -3,3 +3,5 @@ summarize_env/
 *.html
 *.pdf
 *.lock
+*.env
+out/
