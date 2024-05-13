@@ -1,0 +1,5 @@
+{
+    "api_key":"Api Key",
+    "chunk_size": "Chunk Size",
+    "chunk_overlap": "Chunk Overlap"
+}
