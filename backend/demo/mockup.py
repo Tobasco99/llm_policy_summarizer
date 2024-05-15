@@ -63,7 +63,11 @@ def main():
                 docs = setup_documents(uploaded_file, chunk_size, chunk_overlap)
                 st.info("Policy was loaded successfully")
                 st.info(" The Policy is about Regulatory Requirements for Vehicle and Tyre Type-Approval: Safety, Efficiency, and Environmental Standards")
-                knowledge = st.select_slider("Select your Domain Knowledge", options=["None", "Basic", "Expert"])
+                col5, col6 = st.columns([7,1])
+                with col5:
+                    knowledge = st.select_slider("Select your Domain Knowledge", options=["None", "Basic", "Expert"])
+                with col6:
+                    st.button("Not sure?")
                 preference = st.text_area("Special requests", "e.g. Focus on safety and environmental standards.")
 
                 if st.button("Summarize"):
@@ -82,9 +86,27 @@ def main():
                             st.button('Download')
 
     with tab2:
+        answer = """
+#### Type Safety Regulations
+
+Type safety regulations refer to a set of mandatory rules and standards that ensure new vehicles and their components meet specific safety and environmental criteria through type-approval processes.
+
+- Compliance and Safety Enhancement: These regulations ensure vehicle manufacturers adhere to stringent safety and environmental standards, incorporating advanced systems like tyre pressure monitors and intelligent speed assistance.
+- Data Privacy and Security: They mandate strict data handling and system design protocols to protect data privacy and prevent misuse, especially in systems like event data recorders and emergency response mechanisms."""
+
         st.text_input("Enter your question", value="What are type safety regulations?")
         st.button("Ask")
-        st.text_area("Answer", value=dummy)
+
+        # Wrap the Markdown content in a div with CSS for the border
+        html_content = f"""
+        <div style="border: 2px solid lightgrey; border-radius: 10px; padding: 10px;">
+        {answer}
+        </div>
+        """
+
+        # Display the HTML content in Streamlit
+        st.markdown(html_content, unsafe_allow_html=True)
+        #st.markdown(answer)
                     
 
 
