@@ -78,14 +78,17 @@ class LanguageModelConnection:
     
     def generate_policy_summary(self, chunk_summarys, knowledge_level):
         partial_summary = ""
-        # A query intented to prompt a language model to populate the data structure.
+        # A query intented to prompt a language model.
         sum_query = self.prompts['full_summary']
+
+        # use the corresponding knowledge prompt based on the knowledge level
+        knowledge_prompt = self.prompts[knowledge_level+'_Knowledge']
 
         # Set up a parser + inject instructions into the prompt template.
         parser = JsonOutputParser(pydantic_object=PolicySummary)
 
         prompt = PromptTemplate(
-        template="{format_instructions}\n {query}\n The user has {knowledge}\n The Chunk summary: {chunk_summary}\n The partial summary: {partial_summary}\n",
+        template="{format_instructions}\n {query}\n {knowledge_prompt}\n The Chunk summary: {chunk_summary}\n The partial summary: {partial_summary}\n",
         input_variables=["query", "chunk_summary", "partial_summary", "knowledge"],
         partial_variables={"format_instructions": parser.get_format_instructions()},
         )
@@ -93,6 +96,6 @@ class LanguageModelConnection:
         chain = prompt | self.llm | parser
 
         for chunk_summary in chunk_summarys:
-            result = chain.invoke({"query": sum_query, "chunk_summary": chunk_summary, "partial_summary": partial_summary, "knowledge": knowledge_level})
+            result = chain.invoke({"query": sum_query, "chunk_summary": chunk_summary, "partial_summary": partial_summary, "knowledge_prompt": knowledge_prompt})
             partial_summary += result["summary"]
         return partial_summary

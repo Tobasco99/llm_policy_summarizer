@@ -33,11 +33,36 @@ def color_chunks(text: str, chunk_size: int, overlap_size: int) -> str:
 
 
 def main():
-    st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
+    st.markdown(
+        r"""
+        <style>
+        .stDeployButton {
+            visibility: hidden;
+        }
+        </style>
+        """, unsafe_allow_html=True
+    )
+    custom_js = """
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const collapseControl = document.querySelector('[data-testid="collapsedControl"]');
+  const button = collapseControl.querySelector('button');
+  const svg = button.querySelector('svg');
+  
+  // Replace the default collapse icon with the settings wheel icon
+  svg.innerHTML = '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"></path>';
+});
+</script>
+"""
 
-    tab1, tab2 = st.tabs(["Summarization", "Ask your policy"])
+    # Display the custom JavaScript
+    st.markdown(custom_js, unsafe_allow_html=True)
+
+    tab1, tab2 = st.tabs(["Summarization", "Query Policy"])
 
     with tab1:
+        st.sidebar.title("Settings")
 
                 # make the choice of llm to select from a selectbox
         llm = st.sidebar.selectbox("LLM", ["gpt-4-turbo", "gpt-3.5-turbo", "Llama3-8B"])
@@ -76,14 +101,15 @@ def main():
                     st.info("Linked Policies: 631/2009, 406/2010, 672/2010, 1003/2010, 1005/2010, 1008/2010, 1009/2010, 19/2011, 109/2011, 458/2011, 65/2012, 130/2012, 347/2012, 351/2012, 1230/2012")
                     st.text_area("Summary:",dummy, height=400)
                     
-                    col1, col2, col3, col4 = st.columns([1,1,1,1])
+                    col1, col2, col3, col4 = st.columns([1,1,1,10])
 
                     with col1:
-                        c1, c2 = st.columns([1,1])
-                        with c1:
-                            st.button('Print')
-                        with c2:
-                            st.button('Download')
+                        st.button('Re-Generate')
+                    with col2:
+                        st.button('Print')
+                    with col3:
+                        st.button('Download')
+                        
 
     with tab2:
         answer = """
@@ -94,7 +120,7 @@ Type safety regulations refer to a set of mandatory rules and standards that ens
 - Compliance and Safety Enhancement: These regulations ensure vehicle manufacturers adhere to stringent safety and environmental standards, incorporating advanced systems like tyre pressure monitors and intelligent speed assistance.
 - Data Privacy and Security: They mandate strict data handling and system design protocols to protect data privacy and prevent misuse, especially in systems like event data recorders and emergency response mechanisms."""
 
-        st.text_input("Enter your question", value="What are type safety regulations?")
+        st.text_input("Enter your question", value="What are the types of safety regulations?")
         st.button("Ask")
 
         # Wrap the Markdown content in a div with CSS for the border

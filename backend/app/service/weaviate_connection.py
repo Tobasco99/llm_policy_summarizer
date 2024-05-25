@@ -71,7 +71,7 @@ class WeaviateConnection:
                 knowledge = response_json["data"]["objects"][0]["abstract"]
                 return knowledge
         except Exception:
-            print(f"Entity not found: {slash_notation}")
+            #print(f"Entity not found: {slash_notation}")
             return None
 
 
