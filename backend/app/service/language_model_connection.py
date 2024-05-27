@@ -7,7 +7,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_community.llms import Ollama
 import json
-from service.etc.output_classes import Questions, ChunkSummary, PolicySummary
+from service.etc.output_classes import Questions, ChunkSummary, PolicySummary, Answer
 
 
 class LanguageModel(Enum):
@@ -59,7 +59,7 @@ class LanguageModelConnection:
         return result
     
     def generate_chunk_summary(self, text_chunk):
-        # A query intented to prompt a language model to populate the data structure.
+        # A query intented to prompt a language model.
         sum_query = self.prompts['chunk_summary']
 
         # Set up a parser + inject instructions into the prompt template.
@@ -99,3 +99,23 @@ class LanguageModelConnection:
             result = chain.invoke({"query": sum_query, "chunk_summary": chunk_summary, "partial_summary": partial_summary, "knowledge_prompt": knowledge_prompt})
             partial_summary += result["summary"]
         return partial_summary
+    
+    def query_policy(self, question, document_title):
+        # TODO: Use weaviate to find most similar chunks 
+        most_similar = ""
+        # A query intented to prompt a language model.
+        query = self.prompts['query']
+
+        # Set up a parser + inject instructions into the prompt template.
+        parser = JsonOutputParser(pydantic_object=Answer)
+
+        prompt = PromptTemplate(
+        template="{format_instructions}\n {query}\n Context: {text_chunk}\n",
+        input_variables=["query", "text_chunk"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+        )
+
+        chain = prompt | self.llm | parser
+
+        result = chain.invoke({"query": query, "text_chunk": most_similar})
+        return result

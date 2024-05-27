@@ -16,3 +16,6 @@ class ChunkSummary(BaseModel):
 
 class PolicySummary(BaseModel):
     summary: str = Field(description="summary of the policy")
+
+class Answer(BaseModel):
+    answer: str = Field(description="answer to the question")
